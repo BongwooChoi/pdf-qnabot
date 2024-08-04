@@ -28,12 +28,11 @@ def load_document(uploaded_file):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
         temp_file.write(uploaded_file.getvalue())
         temp_file_path = temp_file.name
-    # DirectoryLoader를 사용하여 PDF 파일 로드
-    loader = DirectoryLoader(temp_file_path, glob="*.pdf")
+    # 임시 파일의 디렉토리 경로 가져오기
+    temp_dir = os.path.dirname(temp_file_path)
+    # DirectoryLoader에 디렉토리 경로 전달
+    loader = DirectoryLoader(temp_dir, glob="*.pdf")
     documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    docs = text_splitter.split_documents(documents)
-    return docs
     
 def create_vector_db(docs):
     embeddings = OpenAIEmbeddings()
