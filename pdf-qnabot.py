@@ -11,56 +11,70 @@ Original file is located at
 
 import os
 import streamlit as st
-from langchain.document_loaders import DirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-import io
-import tempfile
+from langchain.chains.question_answering import load_qa_chain
+from langchain.llms import OpenAI
+from PyPDF2 import PdfReader
+import tiktoken
 
 # OpenAI API 키 가져오기
 openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-def load_document(uploaded_file):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-        temp_file.write(uploaded_file.getvalue())
-        temp_file_path = temp_file.name
-    # 임시 파일의 디렉토리 경로 가져오기
-    temp_dir = os.path.dirname(temp_file_path)
-    # DirectoryLoader에 디렉토리 경로 전달
-    loader = DirectoryLoader(temp_dir, glob="*.pdf")
-    documents = loader.load()
-    
-def create_vector_db(docs):
-    embeddings = OpenAIEmbeddings()
-    vectorstore = FAISS.from_documents(docs, embeddings)
-    return vectorstore
+# Streamlit 앱 설정
+st.set_page_config(page_title="PDF 기반 Q&A 챗봇")
+st.header("PDF 기반 Q&A 챗봇")
 
-st.title("PDF 기반 Q&A 챗봇")
+# OpenAI API 키 설정
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
-uploaded_file = st.file_uploader("PDF 파일 업로드", type=["pdf"])
+# PDF 업로드
+pdf = st.file_uploader("PDF 파일을 업로드하세요", type="pdf")
 
-if uploaded_file is not None:
-    file_bytes = io.BytesIO(uploaded_file.read())
-    docs = load_document(file_bytes)  
-    vectorstore = create_vector_db(docs)
-    qa_chain = RetrievalQA.from_chain_type(llm=ChatOpenAI(), chain_type="stuff", retriever=vectorstore.as_retriever())
-    
-    # 이전 질문 및 답변 저장
-    if "history" not in st.session_state:
-        st.session_state.history = []
+# 전역 변수로 질문-답변 기록 저장
+if "qa_history" not in st.session_state:
+    st.session_state.qa_history = []
 
-    user_question = st.text_input("질문을 입력하세요:")
+if pdf is not None:
+    pdf_reader = PdfReader(pdf)
+    text = ""
+    for page in pdf_reader.pages:
+        text += page.extract_text()
+
+    # 텍스트 분할
+    text_splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+    )
+    chunks = text_splitter.split_text(text)
+
+    # 임베딩 생성 및 벡터 저장소 생성
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+    knowledge_base = FAISS.from_texts(chunks, embeddings)
+
+    # 사용자 질문 입력
+    user_question = st.text_input("PDF 내용에 대해 질문하세요:")
+
     if user_question:
-        answer = qa_chain.run(user_question)
-        st.session_state.history.append((user_question, answer))
-    
-    # 이전 질문 및 답변 표시
-    if st.session_state.history:
-        st.subheader("이전 질문 및 답변:")
-        for question, answer in st.session_state.history:
-            st.write(f"**질문:** {question}")
-            st.write(f"**답변:** {answer}")
+        docs = knowledge_base.similarity_search(user_question)
+        llm = OpenAI(openai_api_key=openai_api_key)
+        chain = load_qa_chain(llm, chain_type="stuff")
+        response = chain.run(input_documents=docs, question=user_question)
+
+        # 질문과 답변을 기록에 추가
+        st.session_state.qa_history.append({"question": user_question, "answer": response})
+
+        # 답변 표시
+        st.write("답변:", response)
+
+    # 이전 질문과 답변 표시
+    if st.session_state.qa_history:
+        st.subheader("이전 질문과 답변")
+        for qa in st.session_state.qa_history:
+            st.write(f"Q: {qa['question']}")
+            st.write(f"A: {qa['answer']}")
+            st.write("---")
