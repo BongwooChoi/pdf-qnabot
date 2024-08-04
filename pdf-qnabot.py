@@ -23,13 +23,11 @@ openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 
-def load_document(file):
-    loader = PyPDFLoader(file)
-    documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    docs = text_splitter.split_documents(documents)
+def load_document(uploaded_file):
+    pdf_reader = PyPDFLoader(uploaded_file)
+    docs = pdf_reader.load_and_split()
     return docs
-
+    
 def create_vector_db(docs):
     embeddings = OpenAIEmbeddings()
     vectorstore = FAISS.from_documents(docs, embeddings)
@@ -40,7 +38,9 @@ st.title("PDF 기반 Q&A 챗봇")
 uploaded_file = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 
 if uploaded_file is not None:
-    docs = load_document(uploaded_file)
+    # 파일을 바이트 스트림으로 읽습니다.
+    file_bytes = io.BytesIO(uploaded_file.read())
+    docs = load_document(file_bytes)
     vectorstore = create_vector_db(docs)
     qa_chain = RetrievalQA.from_chain_type(llm=ChatOpenAI(), chain_type="stuff", retriever=vectorstore.as_retriever())
     
