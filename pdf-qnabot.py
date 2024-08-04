@@ -16,6 +16,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
 from io import StringIO
 import os
 
@@ -43,22 +44,26 @@ if uploaded_file is not None:
     
     # PDF 내용 임베딩 및 벡터 DB에 저장
     pdf_text = embed_pdf(uploaded_file)
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    chunks = text_splitter.split_text(pdf_text)
+    
     embeddings = OpenAIEmbeddings()
-    vectorstore = FAISS.from_texts([pdf_text], embeddings)
+    vectorstore = FAISS.from_texts(chunks, embeddings)
     
     question = st.text_input("질문을 입력하세요:")
     
     if question:
         # langchain을 사용하여 Q&A 실행
         llm = OpenAI()
-        qa_chain = load_qa_chain(llm)
+        qa_chain = load_qa_chain(llm, chain_type="stuff")  # chain_type 설정 추가
         docs = vectorstore.similarity_search(question)
         
         if docs:
-            context = docs[0].page_content
-            answer = qa_chain({"question": question, "context": context})
+            context = "\n".join([doc.page_content for doc in docs])
+            inputs = {"question": question, "context": context}
+            answer = qa_chain.run(inputs)
             st.write("답변:")
-            st.write(answer['answer'])
+            st.write(answer)
         else:
             st.write("해당 질문에 대한 정보를 찾을 수 없습니다.")
 
