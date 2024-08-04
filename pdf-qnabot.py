@@ -33,16 +33,16 @@ uploaded_file = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 def summarize_pdf(file):
     pdf_reader = PyPDF2.PdfReader(file)
     summary = []
-    for page_num in range(min(3, pdf_reader.numPages)):  # 최대 3 페이지까지 요약
-        page = pdf_reader.getPage(page_num)
+    for page_num in range(min(3, len(pdf_reader.pages))):  # 최대 3 페이지까지 요약
+        page = pdf_reader.pages[page_num]
         summary.append(page.extract_text())
     return "\n".join(summary[:3])  # 요약 내용을 3줄로 제한
 
 def embed_pdf(file):
     pdf_reader = PyPDF2.PdfReader(file)
     text = ""
-    for page_num in range(pdf_reader.numPages):
-        page = pdf_reader.getPage(page_num)
+    for page_num in range(len(pdf_reader.pages)):
+        page = pdf_reader.pages[page_num]
         text += page.extract_text()
     return text
 
@@ -50,14 +50,14 @@ if uploaded_file is not None:
     st.write("PDF 파일 요약:")
     summary = summarize_pdf(uploaded_file)
     st.write(summary)
-
+    
     # PDF 내용 임베딩 및 벡터 DB에 저장
     pdf_text = embed_pdf(uploaded_file)
     embeddings = OpenAIEmbeddings()
     vectorstore = FAISS.from_texts([pdf_text], embeddings)
-
+    
     question = st.text_input("질문을 입력하세요:")
-
+    
     if question:
         # langchain을 사용하여 Q&A 실행
         llm = OpenAI()
@@ -70,4 +70,3 @@ if uploaded_file is not None:
 # 로컬에서 실행하려면 아래 코드를 사용하세요.
 # if __name__ == "__main__":
 #     st.run()
-
