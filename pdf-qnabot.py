@@ -28,8 +28,7 @@ def load_document(file):
     loader = PyPDFLoader(file)  # BytesIO 객체 직접 전달
     documents = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    docs = text_splitter.split_documents(docume   
-nts)
+    docs = text_splitter.split_documents(documents)
     return docs
     
 def create_vector_db(docs):
