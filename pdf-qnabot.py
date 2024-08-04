@@ -16,17 +16,20 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from PyPDF2 import PdfReader
 import tiktoken
-
-
 
 # Streamlit 앱 설정
 st.set_page_config(page_title="PDF 기반 Q&A 챗봇", layout="wide")
 
 # 사이드바 설정
-st.sidebar.title("PDF 업로드")
+st.sidebar.title("설정")
 pdf = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf")
+model_option = st.sidebar.selectbox(
+    "사용할 모델을 선택하세요",
+    ("GPT-3.5-turbo", "GPT-4o-mini")
+)
 
 # 메인 화면 설정
 st.title("PDF 기반 Q&A 챗봇")
@@ -70,7 +73,13 @@ if st.session_state.knowledge_base is not None:
     user_question = st.text_input("질문을 입력하세요:")
     if user_question:
         docs = st.session_state.knowledge_base.similarity_search(user_question)
-        llm = OpenAI()
+        
+        # 선택된 모델에 따라 LLM 설정
+        if model_option == "GPT-4o-mini":
+            llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
+        else:
+            llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+        
         chain = load_qa_chain(llm, chain_type="stuff")
         response = chain.run(input_documents=docs, question=user_question)
 
@@ -95,7 +104,5 @@ if st.session_state.knowledge_base is not None:
 else:
     st.info("PDF를 업로드해주세요.")
 
-# 채팅 기록 초기화 버튼
-if st.button("채팅 기록 초기화"):
-    st.session_state.qa_history = []
-    st.experimental_rerun()
+# 현재 사용 중인 모델 표시
+st.sidebar.write(f"현재 사용 중인 모델: {model_option}")
