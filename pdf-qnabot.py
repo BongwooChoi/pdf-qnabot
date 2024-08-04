@@ -66,7 +66,26 @@ def process_pdf(pdf):
 # PDF 업로드 시 처리
 if pdf is not None and st.session_state.knowledge_base is None:
     process_pdf(pdf)
+    
+# 메시지 표시 함수
+def display_message(is_user, content):
+    if is_user:
+        icon = "👤"
+        icon_type = "user"
+    else:
+        icon = "🤖"
+        icon_type = "bot"
 
+    message_html = f"""
+    <div class="chat-message {icon_type}">
+        <div class="avatar">
+            {icon}
+        </div>
+        <div class="message">{content}</div>
+    </div>
+    """
+    st.markdown(message_html, unsafe_allow_html=True)
+    
 # 챗봇 인터페이스
 st.write("---")
 if st.session_state.knowledge_base is not None:
