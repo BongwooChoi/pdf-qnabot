@@ -54,16 +54,19 @@ if uploaded_file is not None:
     
     if question:
         # langchain을 사용하여 Q&A 실행
-        llm = OpenAI()
-        qa_chain = load_qa_chain(llm, chain_type="stuff")  # chain_type 설정 추가
+        llm = OpenAI(model="gpt-4o-mini")  # 모델 이름을 gpt-4o-mini로 설정
+        qa_chain = load_qa_chain(llm, chain_type="stuff")
         docs = vectorstore.similarity_search(question)
         
         if docs:
-            context = "\n".join([doc.page_content for doc in docs])
-            inputs = {"question": question, "input_documents": docs}  # input_documents 키 추가
-            answer = qa_chain.run(inputs)
+            answers = []
+            for doc in docs:
+                context = doc.page_content
+                inputs = {"question": question, "input_documents": [doc]}
+                answer = qa_chain.run(inputs)
+                answers.append(answer)
             st.write("답변:")
-            st.write(answer)
+            st.write(" ".join(answers))
         else:
             st.write("해당 질문에 대한 정보를 찾을 수 없습니다.")
 
