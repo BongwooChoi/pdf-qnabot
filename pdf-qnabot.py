@@ -12,6 +12,7 @@ Original file is located at
 import os
 import streamlit as st
 from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import PyPDF2Loader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
