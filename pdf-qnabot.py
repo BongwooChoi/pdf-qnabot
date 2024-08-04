@@ -31,7 +31,7 @@ st.write("PDF 문서를 업로드하고 질문을 입력하세요.")
 uploaded_file = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 
 def summarize_pdf(file):
-    pdf_reader = PyPDF2.PdfFileReader(file)
+    pdf_reader = PyPDF2.PdfReader(file)
     summary = []
     for page_num in range(min(3, pdf_reader.numPages)):  # 최대 3 페이지까지 요약
         page = pdf_reader.getPage(page_num)
@@ -39,7 +39,7 @@ def summarize_pdf(file):
     return "\n".join(summary[:3])  # 요약 내용을 3줄로 제한
 
 def embed_pdf(file):
-    pdf_reader = PyPDF2.PdfFileReader(file)
+    pdf_reader = PyPDF2.PdfReader(file)
     text = ""
     for page_num in range(pdf_reader.numPages):
         page = pdf_reader.getPage(page_num)
