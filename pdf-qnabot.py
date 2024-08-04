@@ -30,14 +30,6 @@ st.write("PDF 문서를 업로드하고 질문을 입력하세요.")
 # PDF 파일 업로드
 uploaded_file = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 
-def summarize_pdf(file):
-    pdf_reader = PyPDF2.PdfReader(file)
-    summary = []
-    for page_num in range(min(3, len(pdf_reader.pages))):  # 최대 3 페이지까지 요약
-        page = pdf_reader.pages[page_num]
-        summary.append(page.extract_text())
-    return "\n".join(summary[:3])  # 요약 내용을 3줄로 제한
-
 def embed_pdf(file):
     pdf_reader = PyPDF2.PdfReader(file)
     text = ""
@@ -47,9 +39,7 @@ def embed_pdf(file):
     return text
 
 if uploaded_file is not None:
-    st.write("PDF 파일 요약:")
-    summary = summarize_pdf(uploaded_file)
-    st.write(summary)
+    st.write("PDF 파일이 성공적으로 업로드되었습니다.")
     
     # PDF 내용 임베딩 및 벡터 DB에 저장
     pdf_text = embed_pdf(uploaded_file)
@@ -63,9 +53,14 @@ if uploaded_file is not None:
         llm = OpenAI()
         qa_chain = load_qa_chain(llm)
         docs = vectorstore.similarity_search(question)
-        answer = qa_chain({"question": question, "context": docs[0].page_content})
-        st.write("답변:")
-        st.write(answer['answer'])
+        
+        if docs:
+            context = docs[0].page_content
+            answer = qa_chain({"question": question, "context": context})
+            st.write("답변:")
+            st.write(answer['answer'])
+        else:
+            st.write("해당 질문에 대한 정보를 찾을 수 없습니다.")
 
 # 로컬에서 실행하려면 아래 코드를 사용하세요.
 # if __name__ == "__main__":
