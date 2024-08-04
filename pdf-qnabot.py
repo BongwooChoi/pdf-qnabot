@@ -22,19 +22,6 @@ from langchain.chat_models import ChatOpenAI
 openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-import os
-import streamlit as st
-from langchain.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-
-# OpenAI API 키 가져오기
-openai_api_key = st.secrets["openai_api_key"]
-os.environ["OPENAI_API_KEY"] = openai_api_key
-
 
 def load_document(file):
     loader = PyPDFLoader(file)
