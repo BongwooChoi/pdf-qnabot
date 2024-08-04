@@ -60,7 +60,7 @@ if uploaded_file is not None:
         
         if docs:
             context = "\n".join([doc.page_content for doc in docs])
-            inputs = {"question": question, "context": context}
+            inputs = {"question": question, "input_documents": docs}  # input_documents 키 추가
             answer = qa_chain.run(inputs)
             st.write("답변:")
             st.write(answer)
