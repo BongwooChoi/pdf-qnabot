@@ -7,3 +7,4 @@ PyPDF2
 faiss-cpu
 requests
 tiktoken
+unstructured
