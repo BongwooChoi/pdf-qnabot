@@ -23,6 +23,35 @@ import tiktoken
 # Streamlit 앱 설정
 st.set_page_config(page_title="PDF 기반 Q&A 챗봇", layout="wide")
 
+# CSS 스타일 정의
+st.markdown("""
+<style>
+    .chat-message {
+        padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: flex
+    }
+    .chat-message.user {
+        background-color: #2b313e
+    }
+    .chat-message.bot {
+        background-color: #475063
+    }
+    .chat-message .avatar {
+      width: 20%;
+    }
+    .chat-message .avatar img {
+      max-width: 78px;
+      max-height: 78px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .chat-message .message {
+      width: 80%;
+      padding: 0 1.5rem;
+      color: #fff;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # 사이드바 설정
 st.sidebar.title("설정")
 pdf = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf")
