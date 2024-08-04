@@ -54,7 +54,7 @@ if uploaded_file is not None:
     
     if question:
         # langchain을 사용하여 Q&A 실행
-        llm = OpenAI(model="gpt-4o-mini")  # 모델 이름을 gpt-4o-mini로 설정
+        llm = OpenAI(model="gpt-4o-mini", api_base="https://api.openai.com/v1/chat/completions")
         qa_chain = load_qa_chain(llm, chain_type="stuff")
         docs = vectorstore.similarity_search(question)
         
