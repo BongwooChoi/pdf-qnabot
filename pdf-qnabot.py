@@ -18,14 +18,17 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
 import io
+import tempfile
 
 # OpenAI API 키 가져오기
 openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-
-def load_document(file):
-    loader = PyPDFLoader(file)  # BytesIO 객체 직접 전달
+def load_document(uploaded_file):
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(uploaded_file.getvalue())
+        temp_file_path = temp_file.name
+    loader = PyPDF2Loader(temp_file_path)
     documents = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     docs = text_splitter.split_documents(documents)
