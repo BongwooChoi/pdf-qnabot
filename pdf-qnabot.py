@@ -17,6 +17,7 @@ from langchain.llms import OpenAI
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from io import StringIO
+import os
 
 # OpenAI API 키 가져오기
 openai_api_key = st.secrets["openai_api_key"]
