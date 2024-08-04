@@ -9,67 +9,66 @@ Original file is located at
 
 #!pip install streamlit langchain langchain_community openai PyPDF2 faiss-cpu tiktoken
 
-import streamlit as st
-import PyPDF2
-import openai
-from langchain.chains.question_answering import load_qa_chain
-from langchain.llms import OpenAI
-from langchain.vectorstores import FAISS
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
-from io import StringIO
 import os
+import streamlit as st
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chains import RetrievalQA
+from langchain.chat_models import ChatOpenAI
 
 # OpenAI API 키 가져오기
 openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-# Streamlit 애플리케이션 설정
-st.title("PDF 기반 Q&A 챗봇")
-st.write("PDF 문서를 업로드하고 질문을 입력하세요.")
+import os
+import streamlit as st
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chains import RetrievalQA
+from langchain.chat_models import ChatOpenAI
 
-# PDF 파일 업로드
+# OpenAI API 키 가져오기
+openai_api_key = st.secrets["openai_api_key"]
+os.environ["OPENAI_API_KEY"] = openai_api_key
+
+
+def load_document(file):
+    loader = PyPDFLoader(file)
+    documents = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    docs = text_splitter.split_documents(documents)
+    return docs
+
+def create_vector_db(docs):
+    embeddings = OpenAIEmbeddings()
+    vectorstore = FAISS.from_documents(docs, embeddings)
+    return vectorstore
+
+st.title("PDF 기반 Q&A 챗봇")
+
 uploaded_file = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 
-def embed_pdf(file):
-    pdf_reader = PyPDF2.PdfReader(file)
-    text = ""
-    for page_num in range(len(pdf_reader.pages)):
-        page = pdf_reader.pages[page_num]
-        text += page.extract_text()
-    return text
-
 if uploaded_file is not None:
-    st.write("PDF 파일이 성공적으로 업로드되었습니다.")
+    docs = load_document(uploaded_file)
+    vectorstore = create_vector_db(docs)
+    qa_chain = RetrievalQA.from_chain_type(llm=ChatOpenAI(), chain_type="stuff", retriever=vectorstore.as_retriever())
     
-    # PDF 내용 임베딩 및 벡터 DB에 저장
-    pdf_text = embed_pdf(uploaded_file)
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = text_splitter.split_text(pdf_text)
-    
-    embeddings = OpenAIEmbeddings()
-    vectorstore = FAISS.from_texts(chunks, embeddings)
-    
-    question = st.text_input("질문을 입력하세요:")
-    
-    if question:
-        # langchain을 사용하여 Q&A 실행
-        llm = OpenAI(model="gpt-4o-mini", api_base="https://api.openai.com/v1/chat/completions")
-        qa_chain = load_qa_chain(llm, chain_type="stuff")
-        docs = vectorstore.similarity_search(question)
-        
-        if docs:
-            answers = []
-            for doc in docs:
-                context = doc.page_content
-                inputs = {"question": question, "input_documents": [doc]}
-                answer = qa_chain.run(inputs)
-                answers.append(answer)
-            st.write("답변:")
-            st.write(" ".join(answers))
-        else:
-            st.write("해당 질문에 대한 정보를 찾을 수 없습니다.")
+    # 이전 질문 및 답변 저장
+    if "history" not in st.session_state:
+        st.session_state.history = []
 
-# 로컬에서 실행하려면 아래 코드를 사용하세요.
-# if __name__ == "__main__":
-#     st.run()
+    user_question = st.text_input("질문을 입력하세요:")
+    if user_question:
+        answer = qa_chain.run(user_question)
+        st.session_state.history.append((user_question, answer))
+    
+    # 이전 질문 및 답변 표시
+    if st.session_state.history:
+        st.subheader("이전 질문 및 답변:")
+        for question, answer in st.session_state.history:
+            st.write(f"**질문:** {question}")
+            st.write(f"**답변:** {answer}")
