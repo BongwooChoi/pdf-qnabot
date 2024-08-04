@@ -19,16 +19,15 @@ from langchain.llms import OpenAI
 from PyPDF2 import PdfReader
 import tiktoken
 
-# OpenAI API 키 가져오기
-openai_api_key = st.secrets["openai_api_key"]
-os.environ["OPENAI_API_KEY"] = openai_api_key
+
 
 # Streamlit 앱 설정
 st.set_page_config(page_title="PDF 기반 Q&A 챗봇")
 st.header("PDF 기반 Q&A 챗봇")
 
-# OpenAI API 키 설정
-openai_api_key = st.secrets["OPENAI_API_KEY"]
+# OpenAI API 키 가져오기
+openai_api_key = st.secrets["openai_api_key"]
+os.environ["OPENAI_API_KEY"] = openai_api_key
 
 # PDF 업로드
 pdf = st.file_uploader("PDF 파일을 업로드하세요", type="pdf")
