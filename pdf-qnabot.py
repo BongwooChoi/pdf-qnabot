@@ -17,6 +17,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
+import io
 
 # OpenAI API 키 가져오기
 openai_api_key = st.secrets["openai_api_key"]
