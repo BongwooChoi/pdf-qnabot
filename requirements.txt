@@ -2,9 +2,7 @@ streamlit
 langchain
 langchain_community
 openai
-pypdf
 PyPDF2
 faiss-cpu
 requests
 tiktoken
-unstructured
