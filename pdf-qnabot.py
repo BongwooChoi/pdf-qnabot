@@ -22,27 +22,32 @@ import tiktoken
 
 
 # Streamlit 앱 설정
-st.set_page_config(page_title="PDF 기반 Q&A 챗봇")
-st.header("PDF 기반 Q&A 챗봇")
+st.set_page_config(page_title="PDF 기반 Q&A 챗봇", layout="wide")
 
-# OpenAI API 키 가져오기
+# 사이드바 설정
+st.sidebar.title("PDF 업로드")
+pdf = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf")
+
+# 메인 화면 설정
+st.title("PDF 기반 Q&A 챗봇")
+
+# OpenAI API 키 설정
 openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-# PDF 업로드
-pdf = st.file_uploader("PDF 파일을 업로드하세요", type="pdf")
-
-# 전역 변수로 질문-답변 기록 저장
+# 세션 상태 초기화
 if "qa_history" not in st.session_state:
     st.session_state.qa_history = []
+if "knowledge_base" not in st.session_state:
+    st.session_state.knowledge_base = None
 
-if pdf is not None:
+# PDF 처리 함수
+def process_pdf(pdf):
     pdf_reader = PdfReader(pdf)
     text = ""
     for page in pdf_reader.pages:
         text += page.extract_text()
 
-    # 텍스트 분할
     text_splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
@@ -51,29 +56,46 @@ if pdf is not None:
     )
     chunks = text_splitter.split_text(text)
 
-    # 임베딩 생성 및 벡터 저장소 생성
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-    knowledge_base = FAISS.from_texts(chunks, embeddings)
+    embeddings = OpenAIEmbeddings()
+    st.session_state.knowledge_base = FAISS.from_texts(chunks, embeddings)
+    st.sidebar.success("PDF가 성공적으로 처리되었습니다!")
 
-    # 사용자 질문 입력
-    user_question = st.text_input("PDF 내용에 대해 질문하세요:")
+# PDF 업로드 시 처리
+if pdf is not None and st.session_state.knowledge_base is None:
+    process_pdf(pdf)
 
+# 챗봇 인터페이스
+st.write("---")
+if st.session_state.knowledge_base is not None:
+    user_question = st.text_input("질문을 입력하세요:")
     if user_question:
-        docs = knowledge_base.similarity_search(user_question)
-        llm = OpenAI(openai_api_key=openai_api_key)
+        docs = st.session_state.knowledge_base.similarity_search(user_question)
+        llm = OpenAI()
         chain = load_qa_chain(llm, chain_type="stuff")
         response = chain.run(input_documents=docs, question=user_question)
 
-        # 질문과 답변을 기록에 추가
         st.session_state.qa_history.append({"question": user_question, "answer": response})
 
-        # 답변 표시
-        st.write("답변:", response)
+    # 채팅 기록 표시
+    for qa in reversed(st.session_state.qa_history):
+        message_container = st.container()
+        with message_container:
+            col1, col2 = st.columns([1, 9])
+            with col1:
+                st.image("https://via.placeholder.com/40x40.png?text=You", width=40)
+            with col2:
+                st.markdown(f"**You:** {qa['question']}")
+            
+            col1, col2 = st.columns([1, 9])
+            with col1:
+                st.image("https://via.placeholder.com/40x40.png?text=Bot", width=40)
+            with col2:
+                st.markdown(f"**Bot:** {qa['answer']}")
+        st.write("---")
+else:
+    st.info("PDF를 업로드해주세요.")
 
-    # 이전 질문과 답변 표시
-    if st.session_state.qa_history:
-        st.subheader("이전 질문과 답변")
-        for qa in st.session_state.qa_history:
-            st.write(f"Q: {qa['question']}")
-            st.write(f"A: {qa['answer']}")
-            st.write("---")
+# 채팅 기록 초기화 버튼
+if st.button("채팅 기록 초기화"):
+    st.session_state.qa_history = []
+    st.experimental_rerun()
