@@ -25,7 +25,7 @@ st.set_page_config(page_title="PDF 기반 Q&A 챗봇", layout="wide")
 
 # 사이드바 설정
 st.sidebar.title("설정")
-pdf = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf")
+pdf = st.sidebar.file_uploader("좌측 사이드바에서 PDF 파일을 업로드하세요", type="pdf")
 model_option = st.sidebar.selectbox(
     "사용할 모델을 선택하세요",
     ("GPT-3.5-turbo", "GPT-4o-mini")
