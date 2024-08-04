@@ -11,8 +11,7 @@ Original file is located at
 
 import os
 import streamlit as st
-from langchain.document_loaders import PyPDFLoader
-from langchain.document_loaders import PyPDF2Loader
+from langchain.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
@@ -26,10 +25,11 @@ openai_api_key = st.secrets["openai_api_key"]
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 def load_document(uploaded_file):
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
         temp_file.write(uploaded_file.getvalue())
         temp_file_path = temp_file.name
-    loader = PyPDF2Loader(temp_file_path)
+    # DirectoryLoader를 사용하여 PDF 파일 로드
+    loader = DirectoryLoader(temp_file_path, glob="*.pdf")
     documents = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     docs = text_splitter.split_documents(documents)
