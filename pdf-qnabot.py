@@ -13,6 +13,13 @@ st.set_page_config(page_title="PDF 기반 Q&A 챗봇", layout="wide")
 # 사이드바 설정
 st.sidebar.title("설정")
 pdfs = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf", accept_multiple_files=True)
+
+# 모델 선택 옵션 추가
+model_option = st.sidebar.selectbox(
+    "모델을 선택하세요",
+    ("gpt-4o-mini", "gpt-3.5-turbo")
+)
+
 temperature_option = st.sidebar.selectbox(
     "응답 스타일을 선택하세요",
     ("일관적인 (0)", "균형잡힌 (0.5)", "창의적인 (1)")
@@ -77,7 +84,7 @@ if st.session_state.knowledge_base is not None:
         temperature = temperature_mapping[temperature_option]
         
         # LLM 설정
-        llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=temperature)
+        llm = ChatOpenAI(model_name=model_option, temperature=temperature)
         
         chain = load_qa_chain(llm, chain_type="stuff")
         response = chain.run(input_documents=docs, question=user_question)
@@ -103,5 +110,5 @@ else:
     st.info("좌측 사이드바에서 PDF 파일들을 업로드해주세요.")
 
 # 현재 사용 중인 설정 표시
-st.sidebar.write(f"현재 사용 중인 모델: gpt-4o-mini")
+st.sidebar.write(f"현재 사용 중인 모델: {model_option}")
 st.sidebar.write(f"현재 응답 스타일: {temperature_option}")
