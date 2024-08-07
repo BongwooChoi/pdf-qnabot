@@ -25,6 +25,11 @@ temperature_mapping = {
     "창의적인 (1)": 1
 }
 
+# 대화 내역 초기화 버튼
+if st.sidebar.button("대화 내역 초기화"):
+    st.session_state.qa_history = []
+    st.sidebar.success("대화 내역이 초기화되었습니다.")
+
 # 메인 화면 설정
 st.title("PDF 기반 Q&A 챗봇")
 
