@@ -15,7 +15,7 @@ st.sidebar.title("설정")
 pdfs = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf", accept_multiple_files=True)
 temperature_option = st.sidebar.selectbox(
     "응답 스타일을 선택하세요",
-    ("일관적인 (0)", "균형잡힌 (0.5)", "창의적인 (1)")
+    ("일관적인 (temperature = 0)", "균형잡힌 (temperature = 0.5)", "창의적인 (temperature = 1)")
 )
 
 # temperature 값 매핑
@@ -42,6 +42,8 @@ if "qa_history" not in st.session_state:
     st.session_state.qa_history = []
 if "knowledge_base" not in st.session_state:
     st.session_state.knowledge_base = None
+if "user_question" not in st.session_state:
+    st.session_state.user_question = ""
 
 # PDF 처리 함수
 def process_pdfs(pdf_files):
@@ -69,7 +71,7 @@ if pdfs and st.session_state.knowledge_base is None:
 # 챗봇 인터페이스
 st.write("---")
 if st.session_state.knowledge_base is not None:
-    user_question = st.text_input("질문을 입력하세요:")
+    user_question = st.text_input("질문을 입력하세요:", value=st.session_state.user_question, key="user_input")
     if user_question:
         docs = st.session_state.knowledge_base.similarity_search(user_question)
         
@@ -82,6 +84,10 @@ if st.session_state.knowledge_base is not None:
         chain = load_qa_chain(llm, chain_type="stuff")
         response = chain.run(input_documents=docs, question=user_question)
         st.session_state.qa_history.append({"question": user_question, "answer": response})
+        
+        # 입력 필드 초기화
+        st.session_state.user_question = ""
+        st.experimental_rerun()
 
     # 채팅 기록 표시
     for qa in reversed(st.session_state.qa_history):
