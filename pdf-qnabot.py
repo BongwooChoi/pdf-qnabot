@@ -15,14 +15,14 @@ st.sidebar.title("설정")
 pdfs = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf", accept_multiple_files=True)
 temperature_option = st.sidebar.selectbox(
     "응답 스타일을 선택하세요",
-    ("일관적인 (0)", "균형잡힌 (0.5)", "창의적인 (1)")
+    ("일관적인 (0)", "균형잡힌 (1)", "창의적인 (2)")
 )
 
 # temperature 값 매핑
 temperature_mapping = {
     "일관적인 (0)": 0,
-    "균형잡힌 (0.5)": 0.5,
-    "창의적인 (1)": 1
+    "균형잡힌 (1)": 1,
+    "창의적인 (2)": 2
 }
 
 # 대화 내역 초기화 버튼
