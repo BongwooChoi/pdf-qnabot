@@ -88,19 +88,20 @@ elif st.session_state.knowledge_base is None:
 # 챗봇 인터페이스
 st.write("---")
 if st.session_state.knowledge_base is not None:
-    user_question = st.text_input("질문을 입력하세요:")
-    if user_question:
-        docs = st.session_state.knowledge_base.similarity_search(user_question)
-        
-        # temperature 설정
-        temperature = temperature_mapping[temperature_option]
-        
-        # LLM 설정
-        llm = ChatOpenAI(model_name=model_option, temperature=temperature)
-        
-        chain = load_qa_chain(llm, chain_type="stuff")
-        response = chain.run(input_documents=docs, question=user_question)
-        st.session_state.qa_history.append({"question": user_question, "answer": response})
+    user_question = st.text_area("질문을 입력하세요:", height=100)
+    if st.button("질문하기"):
+        if user_question:
+            docs = st.session_state.knowledge_base.similarity_search(user_question)
+            
+            # temperature 설정
+            temperature = temperature_mapping[temperature_option]
+            
+            # LLM 설정
+            llm = ChatOpenAI(model_name=model_option, temperature=temperature)
+            
+            chain = load_qa_chain(llm, chain_type="stuff")
+            response = chain.run(input_documents=docs, question=user_question)
+            st.session_state.qa_history.append({"question": user_question, "answer": response})
 
     # 채팅 기록 표시
     for qa in reversed(st.session_state.qa_history):
