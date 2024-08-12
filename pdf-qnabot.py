@@ -69,10 +69,22 @@ def process_pdfs(pdf_files):
     st.session_state.knowledge_base = FAISS.from_texts(chunks, embeddings)
     st.sidebar.success(f"{len(pdf_files)}개의 PDF가 성공적으로 처리되었습니다!")
 
-# PDF 업로드 시 처리
-if pdfs and st.session_state.knowledge_base is None:
+# 기본 PDF 파일 로드 및 처리
+def load_default_pdf():
+    default_pdf_path = "data/default.pdf"
+    if os.path.exists(default_pdf_path):
+        with open(default_pdf_path, "rb") as pdf_file:
+            process_pdfs([pdf_file])
+        st.sidebar.info("기본 PDF 파일이 로드되었습니다.")
+    else:
+        st.sidebar.warning("기본 PDF 파일을 찾을 수 없습니다.")
+
+# PDF 업로드 또는 기본 PDF 로드
+if pdfs:
     process_pdfs(pdfs)
-       
+elif st.session_state.knowledge_base is None:
+    load_default_pdf()
+
 # 챗봇 인터페이스
 st.write("---")
 if st.session_state.knowledge_base is not None:
@@ -107,7 +119,7 @@ if st.session_state.knowledge_base is not None:
                 st.markdown(f"**Bot:** {qa['answer']}")
         st.write("---")
 else:
-    st.info("좌측 사이드바에서 PDF 파일들을 업로드해주세요.")
+    st.info("PDF 파일을 업로드하거나 기본 PDF 파일이 로드될 때까지 기다려주세요.")
 
 # 현재 사용 중인 설정 표시
 st.sidebar.write(f"현재 사용 중인 모델: {model_option}")
