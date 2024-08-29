@@ -39,7 +39,7 @@ if st.sidebar.button("대화 내역 초기화"):
 
 # 메인 화면 설정
 st.title("RAG 기반 PDF Q&A 챗봇")
-st.subheader("업로드한 PDF 문서를 기반으로 답변하는 챗봇입니다.")
+st.subheader("업로드한 PDF 문서 내용을 바탕으로 답변하는 챗봇입니다.")
 st.markdown("※ RAG(Retrieval Augmented Generation): 답변 시 벡터DB에서 문서 내용을 검색하여 더 정확한 답변 생성")
 
 # OpenAI API 키 설정
