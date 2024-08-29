@@ -8,7 +8,7 @@ from langchain.chat_models import ChatOpenAI
 from PyPDF2 import PdfReader
 
 # Streamlit 앱 설정
-st.set_page_config(page_title="PDF 기반 Q&A 챗봇", layout="wide")
+st.set_page_config(page_title="PDF Q&A 챗봇", layout="wide")
 
 # 사이드바 설정
 st.sidebar.title("설정")
@@ -38,7 +38,8 @@ if st.sidebar.button("대화 내역 초기화"):
     st.sidebar.success("대화 내역이 초기화되었습니다.")
 
 # 메인 화면 설정
-st.title("PDF 기반 Q&A 챗봇")
+st.title("RAG 기반 PDF Q&A 챗봇")
+st.subheader("PDF 문서를 업로드하면 해당 문서를 기반으로 답변 드립니다.")
 
 # OpenAI API 키 설정
 openai_api_key = st.secrets["openai_api_key"]
