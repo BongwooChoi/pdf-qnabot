@@ -79,7 +79,7 @@ def load_default_pdf():
             process_pdfs([pdf_file])
         st.sidebar.info("기본 PDF 파일이 로드되었습니다.")
     else:
-        sst.sidebar.info("업로드된 PDF 파일이 없습니다.")
+        st.sidebar.info("기본 PDF 파일이 없습니다. PDF 문서를 업로드해주세요.")
 
 # PDF 업로드 또는 기본 PDF 로드
 if pdfs:
@@ -122,7 +122,9 @@ if st.session_state.knowledge_base is not None:
                 st.markdown(f"**Bot:** {qa['answer']}")
         st.write("---")
 else:
-    st.info("PDF 파일을 업로드하거나 기본 PDF 파일이 로드될 때까지 기다려주세요.")
+    st.info("PDF 문서를 업로드해주세요. 업로드된 PDF가 없어 질문을 할 수 없습니다.")
+    st.text_area("질문을 입력하세요:", height=100, disabled=True)
+    st.button("질문하기", disabled=True)
 
 # 현재 사용 중인 설정 표시
 st.sidebar.write(f"현재 사용 중인 모델: {model_option}")
