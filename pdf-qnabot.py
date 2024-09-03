@@ -122,7 +122,7 @@ if st.session_state.knowledge_base is not None:
                 st.markdown(f"**Bot:** {qa['answer']}")
         st.write("---")
 else:
-    st.info("PDF 문서를 업로드해주세요. 업로드된 PDF가 없어 질문을 할 수 없습니다.")
+    st.info("좌측 사이드바에서 PDF 문서를 업로드해주세요. 업로드된 PDF가 없어 질문을 할 수 없습니다.")
     st.text_area("질문을 입력하세요:", height=100, disabled=True)
     st.button("질문하기", disabled=True)
 
