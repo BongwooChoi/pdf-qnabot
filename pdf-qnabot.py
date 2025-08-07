@@ -17,7 +17,7 @@ pdfs = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf", 
 # 모델 선택 옵션 추가
 model_option = st.sidebar.selectbox(
     "모델을 선택하세요",
-    ("gpt-5-nano", "gpt-3.5-turbo")
+    ("gpt-4o-mini", "gpt-3.5-turbo")
 )
 
 temperature_option = st.sidebar.selectbox(
