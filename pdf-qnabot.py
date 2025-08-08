@@ -1,10 +1,9 @@
 import os
 import streamlit as st
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
-from langchain.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from PyPDF2 import PdfReader
 
 # Streamlit 앱 설정
@@ -14,10 +13,11 @@ st.set_page_config(page_title="RAG 기반 Q&A 챗봇", page_icon="🤖", layout=
 st.sidebar.title("설정")
 pdfs = st.sidebar.file_uploader("PDF 파일을 업로드하세요", type="pdf", accept_multiple_files=True)
 
-# 모델 선택 옵션 추가
+# 모델 선택(고정)
 model_option = st.sidebar.selectbox(
     "모델을 선택하세요",
-    ("gpt-4o-mini", "gpt-3.5-turbo")
+    ("gemini-2.0-flash",),  # Gemini 고정
+    index=0
 )
 
 temperature_option = st.sidebar.selectbox(
@@ -42,9 +42,9 @@ st.title("RAG 기반 Q&A 챗봇🤖")
 st.subheader("업로드한 PDF 문서📋 내용을 바탕으로 답변하는 챗봇입니다.")
 st.markdown("※ RAG(Retrieval Augmented Generation): 답변 시 벡터DB에서 문서 내용을 검색하여 더 정확한 답변을 생성하는 기법")
 
-# OpenAI API 키 설정
-openai_api_key = st.secrets["openai_api_key"]
-os.environ["OPENAI_API_KEY"] = openai_api_key
+# Google API 키 설정
+google_api_key = st.secrets["google_api_key"]
+os.environ["GOOGLE_API_KEY"] = google_api_key
 
 # 세션 상태 초기화
 if "qa_history" not in st.session_state:
@@ -58,8 +58,10 @@ def process_pdfs(pdf_files):
     for pdf in pdf_files:
         pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
-            text += page.extract_text()
-    
+            # 일부 PDF는 extract_text()가 None을 반환할 수 있어 가드 처리
+            page_text = page.extract_text() or ""
+            text += page_text
+
     text_splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
@@ -67,7 +69,9 @@ def process_pdfs(pdf_files):
         length_function=len
     )
     chunks = text_splitter.split_text(text)
-    embeddings = OpenAIEmbeddings()
+
+    # Gemini 임베딩
+    embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
     st.session_state.knowledge_base = FAISS.from_texts(chunks, embeddings)
     st.sidebar.success(f"{len(pdf_files)}개의 PDF가 성공적으로 처리되었습니다!")
 
@@ -94,13 +98,16 @@ if st.session_state.knowledge_base is not None:
     if st.button("질문하기"):
         if user_question:
             docs = st.session_state.knowledge_base.similarity_search(user_question)
-            
+
             # temperature 설정
             temperature = temperature_mapping[temperature_option]
-            
-            # LLM 설정
-            llm = ChatOpenAI(model_name=model_option, temperature=temperature)
-            
+
+            # Gemini LLM 설정
+            llm = ChatGoogleGenerativeAI(
+                model=model_option,              # "gemini-2.0-flash"
+                temperature=temperature
+            )
+
             chain = load_qa_chain(llm, chain_type="stuff")
             response = chain.run(input_documents=docs, question=user_question)
             st.session_state.qa_history.append({"question": user_question, "answer": response})
@@ -114,7 +121,7 @@ if st.session_state.knowledge_base is not None:
                 st.image("https://via.placeholder.com/40x40.png?text=You", width=40)
             with col2:
                 st.markdown(f"**You:** {qa['question']}")
-            
+
             col1, col2 = st.columns([1, 9])
             with col1:
                 st.image("https://via.placeholder.com/40x40.png?text=Bot", width=40)
