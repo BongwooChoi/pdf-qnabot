@@ -1,8 +1,8 @@
 streamlit
-langchain
-langchain_community
-openai
 PyPDF2
 faiss-cpu
 requests
-tiktoken
+langchain>=0.2
+langchain-community>=0.2
+langchain-google-genai>=2.1
+google-genai
